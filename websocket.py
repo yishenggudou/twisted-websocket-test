@@ -31,14 +31,14 @@ def http_headers(s):
     """
 
     d = {}
-
+    print 'http reraponse: \n',s
     for line in s.split("\r\n"):
         try:
             key, value = [i.strip() for i in line.split(":", 1)]
             d[key] = value
         except ValueError:
             pass
-
+    print d
     return d
 
 def is_websocket(headers):
@@ -81,10 +81,10 @@ class WebSocketProtocol(ProtocolWrapper):
     """
 
     buf = ""
-    codec = None
+    codec = "ws"
     location = "/"
-    host = "example.com"
-    origin = "http://example.com"
+    host = "127.0.0.1:9091"
+    origin = "http://10.1.4.154"
     state = REQUEST
 
     def __init__(self, *args, **kwargs):
@@ -173,7 +173,7 @@ class WebSocketProtocol(ProtocolWrapper):
         """
 
         # Obvious but necessary.
-        print self.headers.items()
+        log.msg( str (self.headers.items()))
         if not is_websocket(self.headers):
             log.msg("Not handling non-WS request")
             return False
@@ -183,7 +183,9 @@ class WebSocketProtocol(ProtocolWrapper):
             self.host = self.headers["Host"]
         if "Origin" in self.headers:
             self.origin = self.headers["Origin"]
-
+       
+        print self.host,self.origin
+        print 'access host and origin'
         # Check whether a codec is needed. WS calls this a "protocol" for
         # reasons I cannot fathom.
         protocol = None
@@ -192,12 +194,14 @@ class WebSocketProtocol(ProtocolWrapper):
         elif "Sec-WebSocket-Protocol" in self.headers:
             protocol = self.headers["Sec-WebSocket-Protocol"]
 
+        print 'access protocol'
         if protocol:
             if protocol not in encoders or protocol not in decoders:
                 log.msg("Couldn't handle WS protocol %s!" % protocol)
                 return False
             self.codec = protocol
 
+        print 'access protocol'
         # Start the next phase of the handshake for HyBi-00.
         if is_hybi00(self.headers):
             log.msg("Starting HyBi-00/Hixie-76 handshake")
